@@ -1,6 +1,7 @@
 from tortoise.exceptions import DoesNotExist
 
 from app.db import models
+import random
 
 
 class User(models.User):
@@ -18,3 +19,13 @@ class User(models.User):
     @classmethod
     async def get_count(cls) -> int:
         return await cls.all().count()
+
+
+class Joke(models.Joke):
+    @classmethod
+    async def get_random(cls) -> models.Joke:
+        return random.choice(await cls.all())
+
+    @classmethod
+    async def get_all(cls) -> [models.Joke]:
+        return await cls.all()

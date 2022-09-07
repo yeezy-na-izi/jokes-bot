@@ -6,7 +6,9 @@ from app.config import Config
 users_commands = {
     "help": "Показать список команд",
     "about": "Показать информацию о боте",
-    "dialog": "Запустить тестовый диалог",
+    "add_joke": "Добавить шутку",
+    "joke": "Получить случайную шутку",
+    "all_jokes": "Показать все шутки",
 }
 
 owner_commands = {**users_commands, "ping": "Check bot ping", "stats": "Show bot stats"}
