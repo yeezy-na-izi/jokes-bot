@@ -10,3 +10,8 @@ class User(Model):
 class Joke(Model):
     id = fields.BigIntField(pk=True)
     text = fields.TextField()
+    user = fields.ForeignKeyField(
+        'models.User',
+        related_name='jokes',
+        on_delete=fields.CASCADE,
+    )

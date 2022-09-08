@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
 from app.states import States
-from app.db.functions import Joke
+from app.db.functions import Joke, User
 from app.keyboards.inline import yes_or_no_keyboard, pagination_keyboard
 
 router = Router()
@@ -29,7 +29,8 @@ async def add_joke_text_handler(message: Message, state: FSMContext):
 @router.callback_query(state=States.add_joke_text, text="yes")
 async def add_joke_yes_handler(callback_query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    await Joke.create(text=data["text"])
+    user = await User.get(telegram_id=callback_query.from_user.id)
+    await Joke.create(text=data["text"], user=user)
     await callback_query.message.edit_text("Шутка добавлена")
     await callback_query.answer("Шутка добавлена", show_alert=False)
     await state.clear()
@@ -102,3 +103,13 @@ async def all_jokes_prev_handler(callback_query: CallbackQuery, state: FSMContex
         text, reply_markup=pagination_keyboard(page, len(jokes) // joke_on_page + 1)
     )
     await callback_query.answer()
+
+
+@router.message(Command(commands=["register_all_jokes"]))
+async def register_all_jokes_handler(message: Message):
+    jokes = await Joke.get_all()
+    user = await User.is_registered(message.from_user.id)
+    for i in jokes:
+        i.user = user
+        await i.save()
+    await message.answer("Все шутки зарегистрированы")

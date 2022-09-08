@@ -20,6 +20,10 @@ class User(models.User):
     async def get_count(cls) -> int:
         return await cls.all().count()
 
+    @classmethod
+    async def get_jokes_of_user(cls, telegram_id: int) -> [models.Joke, list]:
+        return await models.Joke.filter(user__telegram_id=telegram_id).all()
+
 
 class Joke(models.Joke):
     @classmethod
