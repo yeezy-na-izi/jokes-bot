@@ -10,6 +10,7 @@ from app.keyboards.inline import yes_or_no_keyboard, pagination_keyboard
 router = Router()
 joke_on_page = 2
 
+
 @router.message(Command(commands=["add_joke"]))
 async def add_joke_handler(message: Message, state: FSMContext):
     await message.answer("Напиши текст шутки")
@@ -52,7 +53,7 @@ async def all_jokes_handler(message: Message, state: FSMContext):
     jokes = await Joke.get_all()
     text = "<b>Список всех шуток:</b> \n\n"
     await state.set_state(States.all_jokes)
-    await state.set_data({"page": 1})
+    await state.set_data({"page": 1, "user": message.from_user.id})
     for joke in jokes[0:joke_on_page]:
         text += f"{joke.text} \n\n"
 
@@ -67,8 +68,11 @@ async def all_jokes_next_handler(callback_query: CallbackQuery, state: FSMContex
     if len(jokes) // joke_on_page + 1 <= data["page"]:
         await callback_query.answer()
         return
+    if data["user"] != callback_query.from_user.id:
+        await callback_query.answer()
+        return
     page = data["page"] + 1
-    await state.set_data({"page": page})
+    await state.set_data({"page": page, "user": callback_query.from_user.id})
     for joke in jokes[(page - 1) * joke_on_page:page * joke_on_page]:
         text += f"{joke.text} \n\n"
 
@@ -86,8 +90,11 @@ async def all_jokes_prev_handler(callback_query: CallbackQuery, state: FSMContex
     if data["page"] <= 1:
         await callback_query.answer()
         return
+    if data["user"] != callback_query.from_user.id:
+        await callback_query.answer()
+        return
     page = data["page"] - 1
-    await state.set_data({"page": page})
+    await state.set_data({"page": page, "user": callback_query.from_user.id})
     for joke in jokes[(page - 1) * joke_on_page:page * joke_on_page]:
         text += f"{joke.text} \n\n"
 
