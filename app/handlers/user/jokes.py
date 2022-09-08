@@ -5,7 +5,7 @@ from aiogram.types import Message, CallbackQuery
 
 from app.states import States
 from app.db.functions import Joke, User
-from app.keyboards.inline import yes_or_no_keyboard, pagination_keyboard
+from app.keyboards.inline import yes_or_no_keyboard, pagination_keyboard, add_my_jokes_keyboard, joke_keyboard
 
 router = Router()
 joke_on_page = 2
@@ -105,11 +105,161 @@ async def all_jokes_prev_handler(callback_query: CallbackQuery, state: FSMContex
     await callback_query.answer()
 
 
-@router.message(Command(commands=["register_all_jokes"]))
-async def register_all_jokes_handler(message: Message):
-    jokes = await Joke.get_all()
-    user = await User.is_registered(message.from_user.id)
-    for i in jokes:
-        i.user = user
-        await i.save()
-    await message.answer("Все шутки зарегистрированы")
+@router.message(Command(commands=["my_jokes"]))
+async def my_jokes_handler(message: Message, state: FSMContext):
+    user = await User.get(telegram_id=message.from_user.id)
+    jokes = await Joke.filter(user=user)
+    if not jokes:
+        await message.answer("У вас нет добавленных шуток")
+        return
+
+    text = "<b>Список всех твоих шуток:</b> \n\n"
+
+    await state.set_state(States.my_jokes)
+    await state.set_data({"page": 1, "user": message.from_user.id})
+    await message.answer(
+        text,
+        reply_markup=add_my_jokes_keyboard(jokes=jokes[:5], page=1, max_page=len(jokes) // 5 + 1)
+    )
+
+
+@router.callback_query(text="my_jokes_next")
+async def my_jokes_next_handler(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    user = await User.get(telegram_id=callback_query.from_user.id)
+    jokes = await Joke.filter(user=user)
+
+    if len(jokes) // 5 + 1 <= data["page"]:
+        await callback_query.answer()
+        return
+    if data["user"] != callback_query.from_user.id:
+        await callback_query.answer()
+        return
+
+    page = data["page"] + 1
+    await state.set_data({"page": page, "user": callback_query.from_user.id})
+
+    text = "<b>Список всех твоих шуток:</b> \n\n"
+
+    await callback_query.message.edit_text(
+        text, reply_markup=add_my_jokes_keyboard(
+            jokes=jokes[5 * (page - 1):5 * page],
+            page=page,
+            max_page=len(jokes) // 5 + 1
+        )
+    )
+    await callback_query.answer()
+
+
+@router.callback_query(text="my_jokes_prev")
+async def my_jokes_prev_handler(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    user = await User.get(telegram_id=callback_query.from_user.id)
+    jokes = await Joke.filter(user=user)
+
+    if data["page"] <= 1:
+        await callback_query.answer()
+        return
+    if data["user"] != callback_query.from_user.id:
+        await callback_query.answer()
+        return
+
+    page = data["page"] - 1
+    await state.set_data({"page": page, "user": callback_query.from_user.id})
+
+    text = "<b>Список всех твоих шуток:</b> \n\n"
+
+    await callback_query.message.edit_text(
+        text, reply_markup=add_my_jokes_keyboard(
+            jokes=jokes[5 * (page - 1):5 * page],
+            page=page,
+            max_page=len(jokes) // 5 + 1
+        )
+    )
+    await callback_query.answer()
+
+
+@router.callback_query(text="back")
+async def back_handler(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    if data["user"] != callback_query.from_user.id:
+        await callback_query.answer()
+        return
+    user = await User.get(telegram_id=data["user"])
+    jokes = await Joke.filter(user=user)
+    if not jokes:
+        await callback_query.message.edit_text("У вас нет добавленных шуток")
+        return
+
+    text = "<b>Список всех твоих шуток:</b> \n\n"
+
+    await state.set_state(States.my_jokes)
+    await state.set_data({"page": 1, "user": callback_query.from_user.id})
+    await callback_query.message.edit_text(
+        text
+    )
+    await callback_query.message.edit_reply_markup(
+        add_my_jokes_keyboard(jokes=jokes[:5], page=1, max_page=len(jokes) // 5 + 1)
+    )
+
+
+@router.callback_query(lambda x: x.data.startswith("joke_") and x.data[5:].isdigit(), state=States.my_jokes)
+async def joke_handler(callback_query: CallbackQuery, state: FSMContext):
+    joke_id = int(callback_query.data[5:])
+    joke = await Joke.get(id=joke_id)
+    data = await state.get_data()
+    if data["user"] != callback_query.from_user.id:
+        await callback_query.answer()
+        return
+
+    text = (
+        f'<b>Шутка</b> \n\n'
+        f'{joke.text}'
+    )
+    await callback_query.message.edit_text(text)
+    await callback_query.message.edit_reply_markup(joke_keyboard(joke_id=joke_id))
+
+    await callback_query.answer()
+
+
+@router.callback_query(lambda x: x.data.startswith("delete_") and x.data[7:].isdigit(), state=States.my_jokes)
+async def delete_joke_handler(callback_query: CallbackQuery, state: FSMContext):
+    joke_id = int(callback_query.data[7:])
+    joke = await Joke.get(id=joke_id)
+    data = await state.get_data()
+    if data["user"] != callback_query.from_user.id:
+        await callback_query.answer()
+        return
+
+    await joke.delete()
+    await callback_query.message.edit_text("Шутка удалена")
+
+
+@router.callback_query(lambda x: x.data.startswith("edit_") and x.data[5:].isdigit(), state=States.my_jokes)
+async def edit_joke_handler(callback_query: CallbackQuery, state: FSMContext):
+    joke_id = int(callback_query.data[5:])
+    data = await state.get_data()
+    if data["user"] != callback_query.from_user.id:
+        await callback_query.answer()
+        return
+
+    await state.set_state(States.edit_joke)
+    await state.set_data({"joke_id": joke_id, "user": callback_query.from_user.id})
+    await callback_query.message.edit_text("Введите новый текст шутки")
+
+    await callback_query.answer()
+
+
+@router.message(state=States.edit_joke)
+async def edit_joke_text_handler(message: Message, state: FSMContext):
+    data = await state.get_data()
+    if data["user"] != message.from_user.id:
+        return
+
+    joke_id = data["joke_id"]
+    joke = await Joke.get(id=joke_id)
+    joke.text = message.text
+    await joke.save()
+    await state.clear()
+    await message.answer("Шутка изменена")
+

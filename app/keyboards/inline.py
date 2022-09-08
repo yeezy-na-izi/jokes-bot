@@ -19,8 +19,35 @@ def yes_or_no_keyboard():
 def pagination_keyboard(page, max_page):
     keyboard = InlineKeyboardBuilder()
     keyboard.row(
-        InlineKeyboardButton(text="Назад", callback_data=f"page_prev"),
+        InlineKeyboardButton(text="<", callback_data=f"page_prev"),
         InlineKeyboardButton(text=f"Страница {page}/{max_page}", callback_data="none"),
-        InlineKeyboardButton(text="Вперёд", callback_data=f"page_next")
+        InlineKeyboardButton(text=">", callback_data=f"page_next")
+    )
+    return keyboard.as_markup()
+
+
+def add_my_jokes_keyboard(jokes, page, max_page):
+    # jokes - список шуток длинной 5
+    keyboard = InlineKeyboardBuilder()
+    for joke in jokes:
+        keyboard.row(
+            InlineKeyboardButton(text=f"{joke.text[:15]}...", callback_data=f"joke_{joke.id}")
+        )
+    keyboard.row(
+        InlineKeyboardButton(text="<", callback_data=f"my_jokes_prev"),
+        InlineKeyboardButton(text=f"Страница {page}/{max_page}", callback_data="none"),
+        InlineKeyboardButton(text=">", callback_data=f"my_jokes_next")
+    )
+    return keyboard.as_markup()
+
+
+def joke_keyboard(joke_id):
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(
+        InlineKeyboardButton(text="Удалить", callback_data=f"delete_{joke_id}"),
+        InlineKeyboardButton(text="Изменить", callback_data=f"edit_{joke_id}")
+    )
+    keyboard.row(
+        InlineKeyboardButton(text="Назад", callback_data="back")
     )
     return keyboard.as_markup()
