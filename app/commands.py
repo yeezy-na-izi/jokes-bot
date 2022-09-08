@@ -9,6 +9,7 @@ users_commands = {
     "add_joke": "Добавить шутку",
     "joke": "Получить случайную шутку",
     "all_jokes": "Показать все шутки",
+    "my_jokes": "Показать свои шутки",
 }
 
 owner_commands = {**users_commands, "ping": "Check bot ping", "stats": "Show bot stats"}
