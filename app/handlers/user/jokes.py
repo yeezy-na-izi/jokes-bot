@@ -88,7 +88,7 @@ async def all_jokes_prev_handler(callback_query: CallbackQuery, state: FSMContex
         return
     page = data["page"] - 1
     await state.set_data({"page": page})
-    for joke in jokes[(page - 1) * 5:page * 5]:
+    for joke in jokes[(page - 1) * 1:page * 1]:
         text += f"{joke.text} \n\n"
 
     await callback_query.message.edit_text(
