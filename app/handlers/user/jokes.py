@@ -8,7 +8,7 @@ from app.db.functions import Joke
 from app.keyboards.inline import yes_or_no_keyboard, pagination_keyboard
 
 router = Router()
-
+joke_on_page = 2
 
 @router.message(Command(commands=["add_joke"]))
 async def add_joke_handler(message: Message, state: FSMContext):
@@ -53,10 +53,10 @@ async def all_jokes_handler(message: Message, state: FSMContext):
     text = "<b>Список всех шуток:</b> \n\n"
     await state.set_state(States.all_jokes)
     await state.set_data({"page": 1})
-    for joke in jokes[0:5]:
+    for joke in jokes[0:joke_on_page]:
         text += f"{joke.text} \n\n"
 
-    await message.answer(text, reply_markup=pagination_keyboard(1, len(jokes) // 5 + 1))
+    await message.answer(text, reply_markup=pagination_keyboard(1, len(jokes) // 2 + 1))
 
 
 @router.callback_query(state=States.all_jokes, text="page_next")
@@ -64,16 +64,16 @@ async def all_jokes_next_handler(callback_query: CallbackQuery, state: FSMContex
     data = await state.get_data()
     jokes = await Joke.get_all()
     text = "<b>Список всех шуток:</b> \n\n"
-    if len(jokes) // 5 + 1 <= data["page"]:
+    if len(jokes) // joke_on_page + 1 <= data["page"]:
         await callback_query.answer()
         return
     page = data["page"] + 1
     await state.set_data({"page": page})
-    for joke in jokes[(page - 1) * 5:page * 5]:
+    for joke in jokes[(page - 1) * joke_on_page:page * joke_on_page]:
         text += f"{joke.text} \n\n"
 
     await callback_query.message.edit_text(
-        text, reply_markup=pagination_keyboard(page, len(jokes) // 5 + 1)
+        text, reply_markup=pagination_keyboard(page, len(jokes) // joke_on_page + 1)
     )
     await callback_query.answer()
 
@@ -88,10 +88,10 @@ async def all_jokes_prev_handler(callback_query: CallbackQuery, state: FSMContex
         return
     page = data["page"] - 1
     await state.set_data({"page": page})
-    for joke in jokes[(page - 1) * 1:page * 1]:
+    for joke in jokes[(page - 1) * joke_on_page:page * joke_on_page]:
         text += f"{joke.text} \n\n"
 
     await callback_query.message.edit_text(
-        text, reply_markup=pagination_keyboard(page, len(jokes) // 5 + 1)
+        text, reply_markup=pagination_keyboard(page, len(jokes) // joke_on_page + 1)
     )
     await callback_query.answer()
