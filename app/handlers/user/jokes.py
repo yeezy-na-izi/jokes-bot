@@ -263,3 +263,12 @@ async def edit_joke_text_handler(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Шутка изменена")
 
+
+@router.message(text="пиздец")
+async def pizdec_handler(message: Message):
+    await message.reply("Мда, треш")
+
+
+@router.message(text="Пиздец")
+async def pizdec_handler(message: Message):
+    await message.reply("Мда, треш")
