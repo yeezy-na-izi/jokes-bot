@@ -7,7 +7,7 @@ from app.db.functions import Joke, User
 from app.keyboards.inline import yes_or_no_keyboard, pagination_keyboard, add_my_jokes_keyboard, joke_keyboard
 from app.states import States
 
-from TikTokApi import TikTokApi
+# from TikTokApi import TikTokApi
 
 router = Router()
 joke_on_page = 2
