@@ -26,6 +26,11 @@
 
 ## Usage
 
+```
+pip install -r requirements.txt
+playwright install
+```
+
 * 📌 [Create](https://github.com/rodion-gudz/telegram-bot-template/generate) and clone repo from this template
 * 🔑 Rename `example.toml` to `config.toml` and change bot settings
 * 📎 Install requirements from `requirements.txt`

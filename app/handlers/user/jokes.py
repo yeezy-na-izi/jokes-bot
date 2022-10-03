@@ -3,9 +3,11 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from app.states import States
 from app.db.functions import Joke, User
 from app.keyboards.inline import yes_or_no_keyboard, pagination_keyboard, add_my_jokes_keyboard, joke_keyboard
+from app.states import States
+
+from TikTokApi import TikTokApi
 
 router = Router()
 joke_on_page = 2
@@ -264,11 +266,25 @@ async def edit_joke_text_handler(message: Message, state: FSMContext):
     await message.answer("Шутка изменена")
 
 
-@router.message(text="пиздец")
-async def pizdec_handler(message: Message):
-    await message.reply("Мда, треш")
+@router.message()
+async def all_message(message: Message):
+    #     check if mess is tiktok url
+    text = message.text
+    # if text.startswith('https://www.tiktok.com/') or text.startswith('https://vt.tiktok.com/'):
+    #     with TikTokApi() as api:
+    #         video = api.video(url=text)
+    #
+    #         video_data = video.bytes()
+    #         print(1)
+    #         await message.answer_video(video_data)
+
+    answer_dict = {
+        'да': 'Пизда',
+        'нет': 'Пидора ответ',
+        'мда, треш': 'Пиздец',
+        'пиздец': 'Мда, треш'
+    }
+    if text.lower() in answer_dict:
+        await message.reply(answer_dict[text.lower()])
 
 
-@router.message(text="Пиздец")
-async def pizdec_handler(message: Message):
-    await message.reply("Мда, треш")
