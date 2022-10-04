@@ -29,8 +29,10 @@ headers = {
     'sec-ch-ua': '^\\^Google',
     'dnt': '1',
     'upgrade-insecure-requests': '1',
-    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 '
+                  'Safari/537.36',
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
+              'application/signed-exchange;v=b3;q=0.9',
     'sec-fetch-site': 'none',
     'sec-fetch-mode': 'navigate',
     'sec-fetch-user': '^\\?1',
@@ -238,7 +240,7 @@ async def back_handler(callback_query: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(lambda x: x.data.startswith("joke_") and x.data[5:].isdigit(), state=States.my_jokes)
-async def joke_handler(callback_query: CallbackQuery, state: FSMContext):
+async def joke_callback_handler(callback_query: CallbackQuery, state: FSMContext):
     joke_id = int(callback_query.data[5:])
     joke = await Joke.get(id=joke_id)
     data = await state.get_data()
@@ -321,7 +323,7 @@ async def return_tik_tok_video(link) -> str:
         async with session.get(link, headers=headers, cookies=cookies) as resp:
             video_id = resp.url.path.split('/')[-1].split('?')[0]
 
-        link = f'https://www.tiktok.com/api/item/detail/?priority_region=&screen_width=1519&browser_name=Mozilla&focus_state=true&is_page_visible=true&referer=&browser_language=ru&timezone_name=Europe%252FMoscow&language=ru&aid=1988&os=ios&screen_height=654&browser_platform=iPhone&browser_online=true&cookie_enabled=true&app_name=tiktok_web&browser_version=Mozilla%252F5.0%2B%2528iPhone%253B%2BCPU%2BiPhone%2BOS%2B12_2%2Blike%2BMac%2BOS%2BX%2529%2BAppleWebKit%252F605.1.15%2B%2528KHTML%252C%2Blike%2BGecko%2529%2BVersion%252F16.0%2BMobile%252F15E148%2BSafari%252F604.1&device_platform=web_mobile&region=US&itemId={video_id}&is_fullscreen=false&history_len=2'
+        link = f'https://www.tiktok.com/api/item/detail/?itemId={video_id}'
         async with session.get(link, headers=headers, cookies=cookies) as resp:
             if resp.status == 200:
                 data = await resp.json()

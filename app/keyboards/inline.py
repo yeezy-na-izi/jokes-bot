@@ -19,9 +19,9 @@ def yes_or_no_keyboard():
 def pagination_keyboard(page, max_page):
     keyboard = InlineKeyboardBuilder()
     keyboard.row(
-        InlineKeyboardButton(text="<", callback_data=f"page_prev"),
+        InlineKeyboardButton(text="<", callback_data="page_prev"),
         InlineKeyboardButton(text=f"Страница {page}/{max_page}", callback_data="none"),
-        InlineKeyboardButton(text=">", callback_data=f"page_next")
+        InlineKeyboardButton(text=">", callback_data="page_next")
     )
     return keyboard.as_markup()
 
@@ -34,9 +34,9 @@ def add_my_jokes_keyboard(jokes, page, max_page):
             InlineKeyboardButton(text=f"{joke.text[:15]}...", callback_data=f"joke_{joke.id}")
         )
     keyboard.row(
-        InlineKeyboardButton(text="<", callback_data=f"my_jokes_prev"),
+        InlineKeyboardButton(text="<", callback_data="my_jokes_prev"),
         InlineKeyboardButton(text=f"Страница {page}/{max_page}", callback_data="none"),
-        InlineKeyboardButton(text=">", callback_data=f"my_jokes_next")
+        InlineKeyboardButton(text=">", callback_data="my_jokes_next")
     )
     return keyboard.as_markup()
 

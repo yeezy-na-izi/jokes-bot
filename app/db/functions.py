@@ -1,7 +1,8 @@
+import random
+
 from tortoise.exceptions import DoesNotExist
 
 from app.db import models
-import random
 
 
 class User(models.User):
