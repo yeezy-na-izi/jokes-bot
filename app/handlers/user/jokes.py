@@ -1,9 +1,10 @@
 import aiohttp
-from aiogram import Router
+from aiogram import Router, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
+from app.config import Config
 from app.db.functions import Joke, User
 from app.keyboards.inline import yes_or_no_keyboard, pagination_keyboard, add_my_jokes_keyboard, joke_keyboard
 from app.states import States
@@ -298,13 +299,16 @@ async def edit_joke_text_handler(message: Message, state: FSMContext):
 
 
 @router.message()
-async def all_message(message: Message):
+async def all_message(message: Message, bot: Bot, config: Config):
     text = message.text
 
     if text.startswith('https://www.tiktok.com/') or text.startswith('https://vt.tiktok.com/'):
         try:
             video = await return_tik_tok_video(text)
             await message.reply_video(video)
+        except KeyError:
+            await message.reply("Видео не найдено")
+            await bot.send_message(config.settings.owner_id, f"Видео не найдено: {text}")
         except Exception as e:
             print(e)
 
@@ -316,6 +320,7 @@ async def return_tik_tok_video(link) -> str:
     async with aiohttp.ClientSession() as session:
         async with session.get(link, headers=headers, cookies=cookies) as resp:
             video_id = resp.url.path.split('/')[-1].split('?')[0]
+
         link = f'https://www.tiktok.com/api/item/detail/?priority_region=&screen_width=1519&browser_name=Mozilla&focus_state=true&is_page_visible=true&referer=&browser_language=ru&timezone_name=Europe%252FMoscow&language=ru&aid=1988&os=ios&screen_height=654&browser_platform=iPhone&browser_online=true&cookie_enabled=true&app_name=tiktok_web&browser_version=Mozilla%252F5.0%2B%2528iPhone%253B%2BCPU%2BiPhone%2BOS%2B12_2%2Blike%2BMac%2BOS%2BX%2529%2BAppleWebKit%252F605.1.15%2B%2528KHTML%252C%2Blike%2BGecko%2529%2BVersion%252F16.0%2BMobile%252F15E148%2BSafari%252F604.1&device_platform=web_mobile&region=US&itemId={video_id}&is_fullscreen=false&history_len=2'
         async with session.get(link, headers=headers, cookies=cookies) as resp:
             if resp.status == 200:
