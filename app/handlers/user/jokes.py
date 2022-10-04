@@ -304,8 +304,7 @@ async def all_message(message: Message):
     if text.startswith('https://www.tiktok.com/') or text.startswith('https://vt.tiktok.com/'):
         try:
             video = await return_tik_tok_video(text)
-            await message.answer_video(video)
-            await message.delete()
+            await message.reply_video(video)
         except Exception as e:
             print(e)
 
